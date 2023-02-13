@@ -2,21 +2,20 @@
 #include <random>
 #include <vector>
 
-#include <patomic_test/patomic_test.hpp>
 #include <patomic_test/aligned_buffer.hpp>
-#include <patomic_test/generic_int.hpp>
 #include <patomic_test/curry_op.hpp>
+#include <patomic_test/generic_int.hpp>
+#include <patomic_test/patomic_test.hpp>
 
-#include <patomic/patomic.h>
 #include <gtest/gtest.h>
-
+#include <patomic/patomic.h>
 
 class ArithmeticOpsLogicTestFixture
-        : public testing::TestWithParam<patomic::test::sized_param>
+: public testing::TestWithParam<patomic::test::sized_param>
 {
 protected:
-    patomic_ops_arithmetic_t m_iops;  // implicit
-    patomic_ops_explicit_arithmetic_t m_eops;  // explicit
+    patomic_ops_arithmetic_t m_iops;          // implicit
+    patomic_ops_explicit_arithmetic_t m_eops; // explicit
     patomic_memory_order_t m_order;
     size_t m_width;
     size_t m_align;
@@ -24,56 +23,58 @@ protected:
     bool m_is_signed;
     std::vector<patomic::test::aligned_buffer> m_buffers;
     // non-owning pointers to aligned buffers
-    unsigned char *m_obj;  // "atomic" object
-    unsigned char *m_ret;  // potential return value
+    unsigned char * m_obj; // "atomic" object
+    unsigned char * m_ret; // potential return value
     std::vector<unsigned char *> m_arg1s;
     std::vector<unsigned char *> m_arg2s;
     static constexpr int m_argc = 50;
 
-    void SetUpBuffers(size_t width, size_t align, unsigned int seed)
+    void
+    SetUpBuffers(size_t width, size_t align, unsigned int seed)
     {
         // setup arg buffers
-        auto bufc = m_argc * 2;  // number of arg vectors
-        for (int i = 0; i < bufc; ++i) { m_buffers.emplace_back(width, align); }
+        auto bufc = m_argc * 2; // number of arg vectors
+        for(int i = 0; i < bufc; ++i) { m_buffers.emplace_back(width, align); }
         // randomise buffer state
         constexpr auto umax = std::numeric_limits<unsigned char>::max();
         std::mt19937 gen(seed);
         std::uniform_int_distribution<unsigned int> dist(0u, umax);
-        for (auto& buf : m_buffers)
+        for(auto & buf : m_buffers)
         {
             auto begin = buf.data;
             auto end = begin + buf.size;
-            while (begin != end) { *begin++ = dist(gen); }
+            while(begin != end) { *begin++ = dist(gen); }
         }
         // setup non-arg buffers and pointers
-        for (int i = 0; i < 2; ++i) { m_buffers.emplace_back(width, align); }
+        for(int i = 0; i < 2; ++i) { m_buffers.emplace_back(width, align); }
         auto it = m_buffers.end();
         m_obj = (--it)->data;
         m_ret = (--it)->data;
         // setup arg pointers
         it = m_buffers.begin();
-        for (int i = 0; i < m_argc; ++i)
+        for(int i = 0; i < m_argc; ++i)
         {
             m_arg1s.push_back((it++)->data);
             m_arg2s.push_back((it++)->data);
         }
     }
 
-    void InsertMinMaxArgs()
+    void
+    InsertMinMaxArgs()
     {
         auto min = patomic::test::generic_int(m_width, m_is_signed);
         auto max = patomic::test::generic_int(m_width, m_is_signed);
         min.min();
         max.max();
         // arg1s
-        if (m_arg1s.size() >= 2)
+        if(m_arg1s.size() >= 2)
         {
             auto it = m_arg1s.end();
             std::memcpy(*(--it), min.data(), m_width);
             std::memcpy(*(--it), max.data(), m_width);
         }
         // arg2s
-        if (m_arg2s.size() >= 2)
+        if(m_arg2s.size() >= 2)
         {
             auto it = m_arg2s.begin();
             std::memcpy(*it++, min.data(), m_width);
@@ -81,14 +82,13 @@ protected:
         }
     }
 
-    void SetUpImplicit()
+    void
+    SetUpImplicit()
     {
         // get patomic
-        auto &p = GetParam();
-        auto pit = patomic_create(
-            p.width, p.order, patomic_option_NONE,
-            patomic_kinds_ALL, p.id
-        );
+        auto & p = GetParam();
+        auto pit = patomic_create(p.width, p.order, patomic_option_NONE,
+                                  patomic_kinds_ALL, p.id);
         // setup members
         m_iops = p.is_signed ? pit.ops.signed_ops : pit.ops.unsigned_ops;
         m_order = p.order;
@@ -96,14 +96,13 @@ protected:
         m_align = pit.align.recommended;
     }
 
-    void SetUpExplicit()
+    void
+    SetUpExplicit()
     {
         // get patomic
-        auto &p = GetParam();
-        auto pet = patomic_create_explicit(
-            p.width, patomic_option_NONE,
-            patomic_kinds_ALL, p.id
-        );
+        auto & p = GetParam();
+        auto pet = patomic_create_explicit(p.width, patomic_option_NONE,
+                                           patomic_kinds_ALL, p.id);
         // setup members
         m_eops = p.is_signed ? pet.ops.signed_ops : pet.ops.unsigned_ops;
         m_order = p.order;
@@ -111,14 +110,21 @@ protected:
         m_align = pet.align.recommended;
     }
 
-    void SetUp() override
+    void
+    SetUp() override
     {
         // setup conditionally
-        auto &p = GetParam();
+        auto & p = GetParam();
         m_is_explicit = p.is_explicit;
         m_is_signed = p.is_signed;
-        if (p.is_explicit) { SetUpExplicit(); }
-        else { SetUpImplicit(); }
+        if(p.is_explicit)
+        {
+            SetUpExplicit();
+        }
+        else
+        {
+            SetUpImplicit();
+        }
         SetUpBuffers(p.width, m_align, p.seed);
         InsertMinMaxArgs();
         // record properties
@@ -134,34 +140,29 @@ protected:
     }
 };
 
+#define CURRY_OP_NO_RET(name)                                                  \
+    ::patomic::test::curry_op_no_ret(this->m_iops.fp_##name,                   \
+                                     this->m_eops.fp_##name,                   \
+                                     this->m_is_explicit, this->m_order)
 
-#define CURRY_OP_NO_RET(name)         \
-    ::patomic::test::curry_op_no_ret( \
-        this->m_iops.fp_##name,       \
-        this->m_eops.fp_##name,       \
-        this->m_is_explicit,          \
-        this->m_order                 \
-    )
-
-#define CURRY_OP_RET(name)         \
-    ::patomic::test::curry_op_ret( \
-        this->m_iops.fp_##name,    \
-        this->m_eops.fp_##name,    \
-        this->m_is_explicit,       \
-        this->m_order              \
-    )
-
+#define CURRY_OP_RET(name)                                                     \
+    ::patomic::test::curry_op_ret(this->m_iops.fp_##name,                      \
+                                  this->m_eops.fp_##name, this->m_is_explicit, \
+                                  this->m_order)
 
 TEST_P(ArithmeticOpsLogicTestFixture, fp_add)
 {
     auto fp_add = CURRY_OP_NO_RET(add);
     // skip
-    if (fp_add == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_add == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vints
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     auto varg = patomic::test::generic_int(m_width, m_is_signed);
     // test
-    for (int i = 0; i < m_argc; ++i)
+    for(int i = 0; i < m_argc; ++i)
     {
         std::memcpy(m_obj, m_arg1s[i], m_width);
         vobj.store(m_arg1s[i], m_width);
@@ -177,12 +178,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_sub)
 {
     auto fp_sub = CURRY_OP_NO_RET(sub);
     // skip
-    if (fp_sub == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_sub == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vints
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     auto varg = patomic::test::generic_int(m_width, m_is_signed);
     // test
-    for (int i = 0; i < m_argc; ++i)
+    for(int i = 0; i < m_argc; ++i)
     {
         std::memcpy(m_obj, m_arg1s[i], m_width);
         vobj.store(m_arg1s[i], m_width);
@@ -198,12 +202,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_inc)
 {
     auto fp_inc = CURRY_OP_NO_RET(inc);
     // skip
-    if (fp_inc == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_inc == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -218,12 +225,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_dec)
 {
     auto fp_dec = CURRY_OP_NO_RET(dec);
     // skip
-    if (fp_dec == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_dec == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -238,12 +248,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_neg)
 {
     auto fp_neg = CURRY_OP_NO_RET(neg);
     // skip
-    if (fp_neg == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_neg == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -258,12 +271,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_add)
 {
     auto fp_fetch_add = CURRY_OP_RET(fetch_add);
     // skip
-    if (fp_fetch_add == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_fetch_add == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vints
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     auto varg = patomic::test::generic_int(m_width, m_is_signed);
     // test
-    for (int i = 0; i < m_argc; ++i)
+    for(int i = 0; i < m_argc; ++i)
     {
         std::memcpy(m_obj, m_arg1s[i], m_width);
         vobj.store(m_arg1s[i], m_width);
@@ -280,12 +296,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_sub)
 {
     auto fp_fetch_sub = CURRY_OP_RET(fetch_sub);
     // skip
-    if (fp_fetch_sub == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_fetch_sub == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vints
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     auto varg = patomic::test::generic_int(m_width, m_is_signed);
     // test
-    for (int i = 0; i < m_argc; ++i)
+    for(int i = 0; i < m_argc; ++i)
     {
         std::memcpy(m_obj, m_arg1s[i], m_width);
         vobj.store(m_arg1s[i], m_width);
@@ -302,12 +321,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_inc)
 {
     auto fp_fetch_inc = CURRY_OP_RET(fetch_inc);
     // skip
-    if (fp_fetch_inc == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_fetch_inc == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -323,12 +345,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_dec)
 {
     auto fp_fetch_dec = CURRY_OP_RET(fetch_dec);
     // skip
-    if (fp_fetch_dec == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_fetch_dec == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -344,12 +369,15 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_neg)
 {
     auto fp_fetch_neg = CURRY_OP_RET(fetch_neg);
     // skip
-    if (fp_fetch_neg == nullptr) { GTEST_SKIP_("Not implemented"); }
+    if(fp_fetch_neg == nullptr)
+    {
+        GTEST_SKIP_("Not implemented");
+    }
     // create vint
     auto vobj = patomic::test::generic_int(m_width, m_is_signed);
     // test
     int i = 0;
-    for (auto arg : m_arg1s)
+    for(auto arg : m_arg1s)
     {
         std::memcpy(m_obj, arg, m_width);
         vobj.store(arg, m_width);
@@ -361,34 +389,41 @@ TEST_P(ArithmeticOpsLogicTestFixture, fp_fetch_neg)
     }
 }
 
-
-static auto get_test_params() -> const std::vector<patomic::test::sized_param>&
+static auto
+get_test_params() -> const std::vector<patomic::test::sized_param> &
 {
     static bool once_flag;
     static std::vector<patomic::test::sized_param> params;
-    if (!once_flag)
+    if(!once_flag)
     {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<unsigned int> dist;
         // generate implicit unsigned params
-        for (auto id : patomic::test::get_ids()) {
+        for(auto id : patomic::test::get_ids())
+        {
             // don't include NULL
-            if (id == patomic_id_NULL) { continue; }
-            for (auto width : patomic::test::get_widths()) {
-                for (auto order : patomic::test::get_orders()) {
+            if(id == patomic_id_NULL)
+            {
+                continue;
+            }
+            for(auto width : patomic::test::get_widths())
+            {
+                for(auto order : patomic::test::get_orders())
+                {
                     // .is_explicit= false, .is_signed=false
-                    params.push_back({width, order, id, dist(gen), false, false});
+                    params.push_back(
+                        {width, order, id, dist(gen), false, false});
                 }
             }
         }
         // copy construct explicit params
         auto pe = params;
-        for (auto& p : pe) { p.is_explicit = true; }
+        for(auto & p : pe) { p.is_explicit = true; }
         params.insert(params.end(), pe.begin(), pe.end());
         // copy construct signed params
         auto ps = params;
-        for (auto& p : ps) { p.is_signed = true; }
+        for(auto & p : ps) { p.is_signed = true; }
         params.insert(params.end(), ps.begin(), ps.end());
         // set flag
         once_flag = true;
@@ -396,8 +431,6 @@ static auto get_test_params() -> const std::vector<patomic::test::sized_param>&
     return params;
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ArithmeticOpsLogicTest,
-    ArithmeticOpsLogicTestFixture,
-    ::testing::ValuesIn(get_test_params().begin(), get_test_params().end())
-);
+INSTANTIATE_TEST_SUITE_P(ArithmeticOpsLogicTest, ArithmeticOpsLogicTestFixture,
+                         ::testing::ValuesIn(get_test_params().begin(),
+                                             get_test_params().end()));

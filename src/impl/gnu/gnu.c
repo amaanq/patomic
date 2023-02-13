@@ -5,20 +5,15 @@
 
 #include <patomic/macros/ignore_unused.h>
 
-
 #if PATOMIC_HAVE_GNU_ATOMIC
-    #include "gnu_atomic.h"
+#include "gnu_atomic.h"
 #elif PATOMIC_HAVE_GNU_SYNC
-    #include "gnu_sync.h"
+#include "gnu_sync.h"
 #endif
 
-
 patomic_t
-patomic_impl_create_gnu(
-    size_t byte_width,
-    patomic_memory_order_t order,
-    unsigned int options
-)
+patomic_impl_create_gnu(size_t byte_width, patomic_memory_order_t order,
+                        unsigned int options)
 {
     patomic_t ret = {0};
     PATOMIC_IGNORE_UNUSED(options);
@@ -35,10 +30,7 @@ patomic_impl_create_gnu(
 }
 
 patomic_explicit_t
-patomic_impl_create_explicit_gnu(
-    size_t byte_width,
-    unsigned int options
-)
+patomic_impl_create_explicit_gnu(size_t byte_width, unsigned int options)
 {
     patomic_explicit_t ret = {0};
     PATOMIC_IGNORE_UNUSED(options);
@@ -54,9 +46,7 @@ patomic_impl_create_explicit_gnu(
 }
 
 patomic_transaction_t
-patomic_impl_create_transaction_gnu(
-    unsigned int options
-)
+patomic_impl_create_transaction_gnu(unsigned int options)
 {
     patomic_transaction_t ret = {0};
     PATOMIC_IGNORE_UNUSED(options);

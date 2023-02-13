@@ -1,18 +1,15 @@
 #include "tsx.h"
 
-#include <patomic/patomic.h>
 #include <patomic/macros/ignore_unused.h>
+#include <patomic/patomic.h>
 
 static const patomic_t patomic_NULL;
 static const patomic_explicit_t patomic_explicit_NULL;
 static const patomic_transaction_t patomic_transaction_NULL;
 
 patomic_t
-patomic_impl_create_tsx(
-    size_t byte_width,
-    patomic_memory_order_t order,
-    unsigned int options
-)
+patomic_impl_create_tsx(size_t byte_width, patomic_memory_order_t order,
+                        unsigned int options)
 {
     patomic_t ret;
     PATOMIC_IGNORE_UNUSED(byte_width);
@@ -25,10 +22,7 @@ patomic_impl_create_tsx(
 }
 
 patomic_explicit_t
-patomic_impl_create_explicit_tsx(
-    size_t byte_width,
-    unsigned int options
-)
+patomic_impl_create_explicit_tsx(size_t byte_width, unsigned int options)
 {
     patomic_explicit_t ret;
     PATOMIC_IGNORE_UNUSED(byte_width);
@@ -40,9 +34,7 @@ patomic_impl_create_explicit_tsx(
 }
 
 patomic_transaction_t
-patomic_impl_create_transaction_tsx(
-    unsigned int options
-)
+patomic_impl_create_transaction_tsx(unsigned int options)
 {
     patomic_transaction_t ret;
     PATOMIC_IGNORE_UNUSED(options);

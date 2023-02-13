@@ -1,6 +1,5 @@
 #include <patomic/patomic_version.h>
 
-
 int
 patomic_version_major(void)
 {
@@ -20,11 +19,7 @@ patomic_version_patch(void)
 }
 
 int
-patomic_version_compatible_with(
-    int major,
-    int minor
-)
+patomic_version_compatible_with(int major, int minor)
 {
-    return major == PATOMIC_VERSION_MAJOR
-        && minor <= PATOMIC_VERSION_MINOR;
+    return major == PATOMIC_VERSION_MAJOR && minor <= PATOMIC_VERSION_MINOR;
 }

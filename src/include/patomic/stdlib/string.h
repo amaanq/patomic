@@ -8,38 +8,22 @@
 #include <patomic/macros/force_inline.h>
 #include <patomic/macros/restrict.h>
 
-
 PATOMIC_NO_EXPORT extern void *
-__patomic_string_memcpy(
-    void *PATOMIC_RESTRICT dst,
-    const void *PATOMIC_RESTRICT src,
-    size_t size
-);
+__patomic_string_memcpy(void * PATOMIC_RESTRICT dst,
+                        const void * PATOMIC_RESTRICT src, size_t size);
 #define patomic_memcpy __patomic_string_memcpy
 
 PATOMIC_NO_EXPORT extern void *
-__patomic_string_memmove(
-    void *PATOMIC_RESTRICT dst,
-    const void *PATOMIC_RESTRICT src,
-    size_t size
-);
+__patomic_string_memmove(void * PATOMIC_RESTRICT dst,
+                         const void * PATOMIC_RESTRICT src, size_t size);
 #define patomic_memmove __patomic_string_memmove
 
-PATOMIC_NO_EXPORT extern void *
-__patomic_string_memset(
-    void *dst,
-    int ch,
-    size_t size
-);
+PATOMIC_NO_EXPORT extern void * __patomic_string_memset(void * dst, int ch,
+                                                        size_t size);
 #define patomic_memset __patomic_string_memset
 
 PATOMIC_NO_EXPORT extern int
-__patomic_string_memcmp(
-    const void *lhs,
-    const void *rhs,
-    size_t size
-);
+__patomic_string_memcmp(const void * lhs, const void * rhs, size_t size);
 #define patomic_memcmp __patomic_string_memcmp
 
-
-#endif  /* !PATOMIC_STDLIB_STRING_H */
+#endif /* !PATOMIC_STDLIB_STRING_H */

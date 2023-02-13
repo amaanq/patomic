@@ -1,6 +1,5 @@
-#include <patomic/patomic.h>
 #include <gtest/gtest.h>
-
+#include <patomic/patomic.h>
 
 TEST(HelperFunctionsTest, cache_line_size)
 {
@@ -83,12 +82,16 @@ TEST(HelperFunctionsTest, is_valid_load_order)
 TEST(HelperFunctionsTest, is_valid_fail_order)
 {
     // requires fail < succ and fail is load order
-    for (int succ = patomic_RELAXED; succ <= patomic_SEQ_CST; ++succ) {
-        for (int fail = patomic_RELAXED; fail <= patomic_SEQ_CST; ++fail) {
-            if (fail > succ || !patomic_is_valid_load_order(fail)) {
+    for(int succ = patomic_RELAXED; succ <= patomic_SEQ_CST; ++succ)
+    {
+        for(int fail = patomic_RELAXED; fail <= patomic_SEQ_CST; ++fail)
+        {
+            if(fail > succ || !patomic_is_valid_load_order(fail))
+            {
                 ASSERT_FALSE(patomic_is_valid_fail_order(succ, fail));
             }
-            else {
+            else
+            {
                 ASSERT_TRUE(patomic_is_valid_fail_order(succ, fail));
             }
         }
